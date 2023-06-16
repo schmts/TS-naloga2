@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ba-deployment
+  kind: backend
+  labels:
+    name: ba-deployment
+    type: backend
+spec:
+  containers:
+    name: ba-pod
+    image: quay.ts.telekom.si/learning/jrejec/app-ba:1.0.0
+  envFrom:
+      - secretRef:
+        name: db-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ba-service
+spec:
+  type: NodePort
+  - targetPort: 3001
+    port: 3001
+    nodePort: 30001
+  selector:
+    type: backend
+---
+apiVersion:
+kind:
+metadata:
+spec:
+---
+apiVersion:
+kind:
+metadata:
+spec:
+---
+apiVersion:
+kind:
+metadata:
+spec:
+---
