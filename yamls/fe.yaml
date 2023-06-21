@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fe-deployment
+  labels:
+    name: fe-deployment
+    type: frontend
+spec:
+  template:
+    metadata:
+      labels:
+        type: frontend
+    spec:      
+      containers:
+        - name: fe-pod
+          image: quay.ts.telekom.si/learning/jrejec/app-fe:1.0.0
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: db-secret
+            - configMapRef:
+                name: db-configmap
+  replicas: 1
+  selector:
+    matchLabels:
+      type: frontend          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fe-service
+spec: 
+  type: NodePort
+  ports:
+    - targetPort: 3000
+      port: 3000
+      nodePort: 30000
+  selector:
+    type: frontend
+
+---

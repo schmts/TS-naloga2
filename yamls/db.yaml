@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgres
+  name: db-deployment
+spec:
+  template:
+    metadata:
+      name: db-pod
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - image: registry.redhat.io/rhel8/postgresql-13
+          name: db-pod
+          ports:
+            - containerPort: 5432
+          command: ["/bin/sh", "-c"]
+          args: ["mkdir docker-entrypoint-initdb.d; curl https://raw.githubusercontent.com/schmts/TS-naloga1/main/init.sql > init.sql; cp init.sql docker-entrypoint-initdb.d/; run-postgresql"]
+          envFrom:
+            - secretRef:
+                name: db-secret
+            - configMapRef:
+                name: db-configmap
+      imagePullSecrets: 
+      - name: regcred
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 5432
+      port: 5432
+  selector:
+    app: postgres
+  
+---
+
+#apiVersion: networking.k8s.io/v1
+#kind: NetworkPolicy
+#metadata:
+#  name: db-networkpolicy
+#spec:
+#  podSelector:
+#    matchLabels:
+#      app: postgres
+#  policyTypes:
+#    - Ingress
+#    - Egress
+#  ingress:
+#    - from:
+#      - podSelector:
+#          matchLabels:
+#            app: postgres
+#      ports:
+#        - port: 5432
+#  egress:
+#    - to:
+#      - podSelector:
+#          matchLabels:
+#            app: postgres
+#      ports:
+#        - port: 5432
+---
+
+#apiVersion: apps/v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: postgres-data
+#  labels: 
+#    type: local
+#spec:
+#  storageClassName: manual
+#  capacity:
+#    storage: 10Gi
+#  accessModes:
+#    - ReadWriteOnce
+#  hostPath:
+#    path: "/data/volume"
