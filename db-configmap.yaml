@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: db-configmap
-data:
-  POSTGRESQL_HOST: postgres-service.default.svc.cluster.local
+data:  
+  POSTGRESQL_HOST: postgres-service.default.svc.cluster.local:5432
   POSTGRESQL_DATABASE: naloga
   POSTGRESQL_USER: postgresUser
