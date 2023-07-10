@@ -17,7 +17,7 @@ spec:
           ports:
             - containerPort: 5432
 #          command: ["/bin/sh", "-c"]
-#          args: ["mkdir docker-entrypoint-initdb.d; curl https://raw.githubusercontent.com/schmts/TS-naloga1/main/init.sql > init.sql; cp init.sql docker-entrypoint-initdb.d/; run-postgresql"]
+#          args: ["cd /; psql -f /docker-entrypoint-initdb.d/init.sql; run-postgresql"]
           envFrom:
             - secretRef:
                 name: db-secret
@@ -25,8 +25,7 @@ spec:
                 name: db-configmap
           volumeMounts:
             - name: postgresql-claim0
-              mountPath: /var/lib/postgresql/data
-
+              mountPath: /var/lib/pgsql/data
             - name: postgresql-initdb
               mountPath: /docker-entrypoint-initdb.d
       volumes:
@@ -56,7 +55,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "~/Dokumenti/kuberdecki/TS-naloga2/yamls/data"
+    path: "/mnt/data"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -77,11 +76,12 @@ kind: Service
 metadata:
   name: postgres-service
 spec:
-  type: NodePort
+  clusterIP: 10.99.138.45
+  type: ClusterIP
   ports:
     - targetPort: 5432
       port: 5432
-      nodePort: 32000
+
   selector:
     app: postgres
   
@@ -93,35 +93,37 @@ metadata:
   name: postgresql-initdb-config
 data:
   init.sql: |
-    CREATE TABLE IF NOT EXISTS besede (
+    CREATE TABLE besede (
     id SERIAL PRIMARY KEY,
     word VARCHAR(50)
     );
 
 ---
-#apiVersion: networking.k8s.io/v1
-#kind: NetworkPolicy
-#metadata:
-#  name: db-networkpolicy
-#spec:
-#  podSelector:
-#    matchLabels:
-#      app: postgres
-#  policyTypes:
-#    - Ingress
-#    - Egress
-#  ingress:
-#    - from:
-#      - podSelector:
-#          matchLabels:
-#            app: postgres
-#      ports:
-#        - port: 5432
-#  egress:
-#    - to:
-#      - podSelector:
-#          matchLabels:
-#            app: postgres
-#      ports:
-#        - port: 5432
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-networkpolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+      type: backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app: postgres
+      ports:
+        - port: 5432
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            app: postgres
+      ports:
+        - port: 5432
 ---

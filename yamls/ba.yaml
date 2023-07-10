@@ -16,9 +16,9 @@ spec:
     spec:
       containers:
         - name: ba-pod
-          image: jrejec/app-ba:1.0.0
-          #image: quay.ts.telekom.si/learning/jrejec/app-ba:1.0.0
-          imagePullPolicy: Never
+          image: quay.ts.telekom.si/learning/jrejec/app-ba:1.0.0
+          #image: jrejec/app-ba:1.0.0
+          #imagePullPolicy: Never
           ports:
             - containerPort: 3001
           envFrom:
@@ -36,6 +36,7 @@ kind: Service
 metadata:
   name: ba-service
 spec:
+  clusterIP: 10.96.153.140
   type: NodePort
   ports:
   - targetPort: 3001
